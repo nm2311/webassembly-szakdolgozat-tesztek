@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+textarea {
+  width: 640px;
+}
+</style>
+<script src="test/fib.js"></script>
+<script id="ws_instantiate_code">
+var module, functions = {};
+fetch('test/fib.wasm')
+  .then(response => response.arrayBuffer())
+  .then(buffer => new Uint8Array(buffer))
+  .then(binary => {
+    var moduleArgs = {
+      wasmBinary: binary,
+      onRuntimeInitialized: function () {
+        functions.fib =
+          module.cwrap('fib',
+                       'number',
+                       ['number']);
+        onReady();
+      }
+    };
+    module = Module(moduleArgs);
+  });
+</script>
+<script id="test_code">
+function start() {
+  document.getElementById('run_button').disabled = true;
+
+  var num = 0x28;
+  var loop = 100;
+  var runs = 5;
+
+  var wsPerformance = document.getElementById('ws_performance');
+
+  wsPerformance.innerText = '';
+
+  function run(func, n, loop, runs) {
+    var startTime = performance.now();
+    for (var i = 0; i < runs; i++) {
+      console.log('Round ' + (i + 1))
+      for (var j = 0; j < loop; j++) {
+        func(n);
+      }
+    }
+    var endTime = performance.now();
+    return ((endTime - startTime) / runs).toLocaleString();
+  }
+
+  // don't use Promise for the non Promise support browsers so far.
+  setTimeout(function () {
+    setTimeout(function () {
+      wsPerformance.innerText = run(functions.fib, num, loop, runs);
+      document.getElementById('message').innerText = 'Done';
+      document.getElementById('run_button').disabled = false;
+    });
+    document.getElementById('message').innerText = 'Running WebAssembly';
+  });
+  }
+</script>
+<script>
+function onReady() {
+  document.getElementById('run_button').disabled = false;
+  document.getElementById('message').innerText = 'Ready';
+}
+
+function init() {
+  putCode('test_code_area', document.getElementById('test_code').text.trim());
+
+
+  loadTextFile('test/fib.c', function(text) {
+    putCode('ws_code_area', text.trim());
+  });
+
+  loadTextFile('test/fib.sh', function(text) {
+    putCode('sh_code_area', text.trim());
+  });
+
+  putCode('ws_instantiate_code_area',
+          document.getElementById('ws_instantiate_code').text.trim());
+}
+
+function loadTextFile(url, callback) {
+  var request = new XMLHttpRequest();
+  request.open('GET', url);
+  request.responseType = 'text';
+  request.onload = function (event) {
+    callback(request.response);
+  };
+  request.send();
+}
+
+function putCode(textareaId, code) {
+  var textarea = document.getElementById(textareaId);
+  textarea.value = code;
+  textarea.setAttribute('rows', code.split('\n').length);
+}
+
+function switchDisplay(div) {
+  var textarea = div.getElementsByTagName('textarea')[0];
+  var p = div.getElementsByTagName('p')[0];
+  p.textContent = p.textContent.slice(2);
+  if (textarea.style.display === 'none') {
+    textarea.style.display = '';
+    p.textContent = '- ' + p.textContent;
+  } else {
+    textarea.style.display = 'none';
+    p.textContent = '+ ' + p.textContent;
+  }
+}
+</script>
+</head>
+<body onload="init()">
+  <div>
+    <p>
+      <button id="run_button" onclick="start()" disabled>run</button>
+      <span id="message">Loading WebAssembly</span>
+    </p>
+    <p>
+      Result (average [ms])<br />
+      WebAssembly: <span id="ws_performance"></span><br />
+    </p>
+  </div>
+  <div>
+    <p onclick="switchDisplay(this.parentNode)">+ Test code</p>
+    <p><textarea id="test_code_area" readonly style="display:none"></textarea></p>
+  </div>
+  <div>
+    <p onclick="switchDisplay(this.parentNode)">- WebAssembly C code</p>
+    <p><textarea id="ws_code_area" readonly></textarea></p>
+  </div>
+  <div>
+    <p onclick="switchDisplay(this.parentNode)">+ WebAssembly Compile shell script</p>
+    <p><textarea id="sh_code_area" readonly style="display:none"></textarea></p>
+  </div>
+  <div>
+    <p onclick="switchDisplay(this.parentNode)">+ WebAssembly Instantiation code</p>
+    <p><textarea id="ws_instantiate_code_area" readonly style="display:none"></textarea></p>
+  </div>
+</body>
+</html>
