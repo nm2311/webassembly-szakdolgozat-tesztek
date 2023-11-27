@@ -4,13 +4,13 @@
 
 Forrás: [github.com](https://github.com/PlummersSoftwareLLC/Primes)
 
-Ebben a tesztben a natív C és C++ kód, valamint ezek WebAssembly-re fordított változatainak futási sebességét hasonéíthatjuk össze.
+Ebben a tesztben a natív C és C++ kód, valamint ezek WebAssembly-re fordított változatainak futási sebességét hasonlíthatjuk össze.
 
 ## 2. teszt - WASM és JavaScript sebessége a böngészőben
 
 Forrás: [github.com](https://github.com/takahirox/WebAssembly-benchmark)
 
-Ebben a tesztben a JavaScript és C nyelvű kódok futási sebességét vetjük össze, miután azokat WebAssembly-re fordítottuk. Az implementáció azonos.
+Ebben a tesztben a JavaScript és C nyelvű, de WebAssembly-re fordított kódok futási sebességét vetjük össze.
 
 ## 3. teszt - Alapszintű és optimalizáló fordító használata
 
